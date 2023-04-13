@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/hdt3213/godis/config"
 	"github.com/hdt3213/godis/lib/logger"
 	"github.com/hdt3213/godis/lib/utils"
 	RedisServer "github.com/hdt3213/godis/redis/server"
 	"github.com/hdt3213/godis/tcp"
-	"os"
 )
 
 var banner = `
@@ -34,12 +35,14 @@ func fileExists(filename string) bool {
 
 func main() {
 	print(banner)
+	// 初始化logger
 	logger.Setup(&logger.Settings{
 		Path:       "logs",
 		Name:       "godis",
 		Ext:        "log",
 		TimeFormat: "2006-01-02",
 	})
+	// 读取配置文件
 	configFilename := os.Getenv("CONFIG")
 	if configFilename == "" {
 		if fileExists("redis.conf") {
@@ -51,6 +54,7 @@ func main() {
 		config.SetupConfig(configFilename)
 	}
 
+	// 使用配置启动服务,监听
 	err := tcp.ListenAndServeWithSignal(&tcp.Config{
 		Address: fmt.Sprintf("%s:%d", config.Properties.Bind, config.Properties.Port),
 	}, RedisServer.MakeHandler())
